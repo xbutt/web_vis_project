@@ -21,3 +21,5 @@ for (loc in 1:nrow(locations)) {
 
 data = as.data.table(data)
 data = melt(data, id.vars = c("time", "location"))
+data$year = as.integer(format(data$time, "%Y"))
+data$month = as.integer(format(data$time, "%m"))
