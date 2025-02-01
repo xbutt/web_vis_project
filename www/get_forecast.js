@@ -1,7 +1,7 @@
 const locations = [
-    { name: "Ashgabat", latitude: 37.9601, longitude: 58.3261 },
-    { name: "Bishkek", latitude: 42.8746, longitude: 74.5698 },
-    { name: "Dushanbe", latitude: 38.5598, longitude: 68.7864 },
+    { name: "Bukhara", latitude: 39.7741, longitude: 64.4248 },
+    { name: "Fergana", latitude: 40.3777, longitude: 71.7913 },
+    { name: "Samarkand", latitude: 39.6542, longitude: 66.959 },
     { name: "Tashkent", latitude: 41.2995, longitude: 69.2401 }
 ];
 
