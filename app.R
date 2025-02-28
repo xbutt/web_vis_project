@@ -3,11 +3,13 @@ library(dplyr)
 library(dygraphs)
 library(ggiraph)
 library(ggplot2)
+library(httr2)
 library(leaflet)
 library(reshape2)
 library(shiny)
 library(shinyBS)
 library(shinythemes)
+library(RColorBrewer)
 
 #data sourcing
 source("load_data.r")
@@ -24,10 +26,17 @@ ui_parts_labels <- list(
   dygraph = "Time Series"
 )
 
+palettes = list(
+  Brewer = brewer.pal(4, "Set2"),
+  Blues = c("#8ecae6", "#219ebc", "#126782", "#005f73"),
+  CMYK = c("cyan", "magenta", "yellow", "black" )
+)
+
 #frontend
 ui <- fluidPage( 
   
   tags$head(tags$script(src = "get_forecast.js"),
+            tags$script(src = "palettes.js"),
             tags$link(rel = "stylesheet", type = "text/css", href = "styles.css")),
   
   titlePanel("Interactive Climate Dashboard for Uzbekistan"),
@@ -115,13 +124,14 @@ ui <- fluidPage(
                sidebarPanel(
                  selectInput("variable", "Select Parameter to Visualize:", choices = setNames(names(variable_labels), variable_labels)),
                  checkboxGroupInput("locations", "Select a city:", levels(data$location), selected = levels(data$location)[4]),
-                 checkboxGroupInput("ui_parts", "Select plot type:", choices = setNames(names(ui_parts_labels), ui_parts_labels), selected = NULL),
+                 checkboxGroupInput("ui_parts", "Select plot type:", choices = setNames(names(ui_parts_labels), ui_parts_labels), selected = "girafe"),
                  bsCollapsePanel("What is a Scatter Plot?", 
                          "A scatter plot is a type of data visualization that shows the relationship between two variables.",
                          style = "info"),
                  bsCollapsePanel("What is a Time Series?", 
                          "A time series is a sequence of data points collected or recorded at specific time intervals.",
                          style = "info"),
+                 selectInput("palette", "Choose your colour palette:", names(palettes))
                  ),
                mainPanel(
                  conditionalPanel("input.ui_parts.includes('girafe')", 
@@ -138,7 +148,7 @@ ui <- fluidPage(
 ))))
 
 
-server <- function(input, output) {
+server <- function(input, output, session) {
 
   color_palette <- c("#8ecae6", "#219ebc", "#126782", "#005f73")
   
@@ -279,11 +289,18 @@ server <- function(input, output) {
                                        tooltip = paste0("<b>", location, "</b><br>",
                                                         "Date: ", time, "<br>",
                                                         variable_labels[[input$variable]], ": ", round(value, 2)))) +
-      geom_point_interactive() +
-      scale_color_brewer(palette = "Set2") +
+      geom_point_interactive() + 
+      scale_color_manual(values = palettes[[input$palette]]) +
       labs(title = paste("Trends of", variable_labels[[input$variable]], "in", paste(input$locations, collapse = ", ")),
            x = "Year", y = variable_labels[[input$variable]], color = "City") +
-      theme_light()
+      theme_minimal() +
+      theme(
+        plot.title = element_text(face = "bold", size = 20, hjust = 0.5, color = "#2C3E50"),
+        axis.title.x = element_text(face = "bold", size = 14),  
+        axis.title.y = element_text(face = "bold", size = 14), 
+        legend.position = "right", 
+        strip.text = element_text(face = "bold", size = 14)
+      )
     girafe(ggobj = plot)
   })
   
@@ -302,8 +319,13 @@ server <- function(input, output) {
     stats_summary()
   })
   
+  observeEvent(input$palette, {
+    session$sendCustomMessage("plotColors", palettes[[input$palette]])
+  })
+  
   output$dygraph <- renderDygraph({
-    dygraph(dcast(data_to_plot(), "time ~ location + variable")) %>% dyRangeSelector()
+    dygraph(dcast(data_to_plot(), "time ~ location + variable")) %>% dyRangeSelector() %>%
+      dyOptions(colors = palettes[[isolate(input$palette)]])
   })
   
   output$temperatures <- renderText({
