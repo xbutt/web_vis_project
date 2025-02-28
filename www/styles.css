@@ -2,8 +2,9 @@
 
 body {
     background-color: #f8f8f8;
-    font-family: 'Open Sans', sans-serif; /* Main body text font */
-    color: #333;
+    font-family: 'Open Sans', sans-serif; 
+    font-size: 18px;
+    color: #2C3E50;
 }
 
 h2, h1 {
@@ -15,6 +16,7 @@ h3 {
   font-family: 'Roboto Slab', serif; /* Header font */
   color: #005f73; /* Deep teal for headers */
 }
+
 
 
 #temperatures {
