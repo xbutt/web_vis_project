@@ -295,7 +295,7 @@ server <- function(input, output, session) {
     if ("girafe" %in% input$ui_parts) {
       plot <- ggplot(data_to_plot(), aes(x = time, y = value, colour = location, group = location, 
                                          tooltip = paste0("<b>", location, "</b><br>",
-                                                          "Date: ", time, "<br>",
+                                                          "Date: ", format(time, "%Y-%m"), "<br>", 
                                                           variable_labels[[input$variable]], ": ", round(value, 2)))) +
         geom_point_interactive() + 
         scale_color_manual(values = palettes[[input$palette]]) +
