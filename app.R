@@ -3,6 +3,7 @@ library(dplyr)
 library(dygraphs)
 library(ggiraph)
 library(ggplot2)
+library(here)
 library(httr2)
 library(leaflet)
 library(reshape2)
@@ -12,7 +13,7 @@ library(shinythemes)
 library(RColorBrewer)
 
 #data sourcing
-source("load_data.r")
+source(here(("load_data.R")))
 
 #labeling
 variable_labels <- list(
