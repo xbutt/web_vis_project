@@ -125,7 +125,7 @@ ui <- fluidPage(
                sidebarPanel(
                  selectInput("variable", "Select Parameter to Visualize:", choices = setNames(names(variable_labels), variable_labels)),
                  checkboxGroupInput("locations", "Select a city:", levels(data$location), selected = levels(data$location)[4]),
-                 checkboxGroupInput("ui_parts", "Select plot type:", choices = setNames(names(ui_parts_labels), ui_parts_labels), selected = "girafe"),
+                 checkboxGroupInput("ui_parts", "Select plot type:", choices = setNames(names(ui_parts_labels), ui_parts_labels), selected = FALSE),
                  bsCollapsePanel("What is a Scatter Plot?", 
                          "A scatter plot is a type of data visualization that shows the relationship between two variables.",
                          style = "info"),
@@ -135,16 +135,22 @@ ui <- fluidPage(
                  selectInput("palette", "Choose your colour palette:", names(palettes))
                  ),
                mainPanel(
-                 conditionalPanel("input.ui_parts.includes('girafe')", 
-                                  girafeOutput("girafe", width = 600), 
-                                  tableOutput("stats_table")),
-                 conditionalPanel(condition = "input.ui_parts.includes('girafe')",
-                                  sliderInput("year_slider", "Select Year Range:", 
-                                              min = min(data$year), 
-                                              max = max(data$year), 
-                                              value = c(min(data$year), max(data$year)), 
-                                              step = 1)),
-                 conditionalPanel("input.ui_parts.includes('dygraph')", dygraphOutput("dygraph"))
+                 textOutput("no_city_message"),
+                 conditionalPanel(
+                   "input.ui_parts.includes('girafe') && input.locations.length > 0", 
+                   girafeOutput("girafe", width = 600), 
+                   tableOutput("stats_table")
+                 ),
+                 conditionalPanel(
+                   "input.ui_parts.includes('girafe') && input.locations.length > 0", 
+                   sliderInput("year_slider", "Select Year Range:", 
+                               min = min(data$year), 
+                               max = max(data$year), 
+                               value = c(min(data$year), max(data$year)), 
+                               step = 1)
+                 ),
+                 conditionalPanel("input.ui_parts.includes('dygraph') && input.locations.length > 0", 
+                                  dygraphOutput("dygraph"))
                  )
 ))))
 
@@ -286,23 +292,27 @@ server <- function(input, output, session) {
   })
   
   output$girafe <- renderGirafe({
-    plot <- ggplot(data_to_plot(), aes(x = time, y = value, colour = location, group = location, 
-                                       tooltip = paste0("<b>", location, "</b><br>",
-                                                        "Date: ", time, "<br>",
-                                                        variable_labels[[input$variable]], ": ", round(value, 2)))) +
-      geom_point_interactive() + 
-      scale_color_manual(values = palettes[[input$palette]]) +
-      labs(title = paste("Trends of", variable_labels[[input$variable]], "in", paste(input$locations, collapse = ", ")),
-           x = "Year", y = variable_labels[[input$variable]], color = "City") +
-      theme_minimal() +
-      theme(
-        plot.title = element_text(face = "bold", size = 20, hjust = 0.5, color = "#2C3E50"),
-        axis.title.x = element_text(face = "bold", size = 14),  
-        axis.title.y = element_text(face = "bold", size = 14), 
-        legend.position = "right", 
-        strip.text = element_text(face = "bold", size = 14)
-      )
-    girafe(ggobj = plot)
+    if ("girafe" %in% input$ui_parts) {
+      plot <- ggplot(data_to_plot(), aes(x = time, y = value, colour = location, group = location, 
+                                         tooltip = paste0("<b>", location, "</b><br>",
+                                                          "Date: ", time, "<br>",
+                                                          variable_labels[[input$variable]], ": ", round(value, 2)))) +
+        geom_point_interactive() + 
+        scale_color_manual(values = palettes[[input$palette]]) +
+        labs(title = paste("Trends of", variable_labels[[input$variable]], "in", paste(input$locations, collapse = ", ")),
+             x = "Year", y = variable_labels[[input$variable]], color = "City") +
+        theme_minimal() +
+        theme(
+          plot.title = element_text(face = "bold", size = 20, hjust = 0.5, color = "#2C3E50"),
+          axis.title.x = element_text(face = "bold", size = 14),  
+          axis.title.y = element_text(face = "bold", size = 14), 
+          legend.position = "right", 
+          strip.text = element_text(face = "bold", size = 14)
+        )
+      return(girafe(ggobj = plot)) 
+    }
+
+    return(NULL)
   })
   
   stats_summary <- reactive({
@@ -325,8 +335,34 @@ server <- function(input, output, session) {
   })
   
   output$dygraph <- renderDygraph({
-    dygraph(dcast(data_to_plot(), "time ~ location + variable")) %>% dyRangeSelector() %>%
-      dyOptions(colors = palettes[[isolate(input$palette)]])
+    if ("dygraph" %in% input$ui_parts) {
+      return(dygraph(dcast(data_to_plot(), "time ~ location + variable")) %>% 
+               dyRangeSelector() %>%
+               dyOptions(colors = palettes[[isolate(input$palette)]]))  
+    }
+    return(NULL)
+  })
+  
+  observe({
+    #if both city and plot type are selected, clear the message
+    if (length(input$locations) > 0 && length(input$ui_parts) > 0) {
+      output$no_city_message <- renderText(NULL)
+    }
+    
+    #if no city is selected but at least one plot type is selected
+    else if (length(input$locations) == 0 && length(input$ui_parts) > 0) {
+      output$no_city_message <- renderText("No city selected.")
+    }
+    
+    #if a city is selected but no plot type is selected
+    else if (length(input$locations) > 0 && length(input$ui_parts) == 0) {
+      output$no_city_message <- renderText("No plot type selected.")
+    }
+    
+    #if neither a city nor a plot type is selected, clear the message
+    else {
+      output$no_city_message <- renderText(NULL)
+    }
   })
   
   output$temperatures <- renderText({
