@@ -13,7 +13,8 @@ library(shinythemes)
 library(RColorBrewer)
 
 #data sourcing
-source(here(("load_data.R")))
+source(here("load_data.R"))
+source(here("plot_functions.R"))
 
 #labeling
 variable_labels <- list(
@@ -159,122 +160,36 @@ server <- function(input, output, session) {
 
   color_palette <- c("#8ecae6", "#219ebc", "#126782", "#005f73")
   
-  #temperature boxplot
-  output$temp_boxplot <- renderPlot({
-    ggplot(data %>% filter(variable == "t2m"), aes(x = factor(year), y = value, fill = location)) + 
-      geom_boxplot(outlier.shape = NA, alpha = 0.7) +  
-      facet_wrap(~ location) +  
-      scale_fill_manual(values = color_palette) +  
-      scale_x_discrete(guide = guide_axis(angle = 45)) +
-      labs(
-        title = "Yearly Distribution of Temperature Data Across Selected Cities",  
-        x = "Year", 
-        y = "Temperature [°C]"
-      ) + 
-      theme_minimal(base_size = 14) +
-      theme(
-        plot.title = element_text(face = "bold", size = 20, hjust = 0.5, color = "#2C3E50"),
-        axis.title.x = element_text(face = "bold", size = 14),  
-        axis.title.y = element_text(face = "bold", size = 14), 
-        legend.position = "none", 
-        strip.text = element_text(face = "bold", size = 14)
-      )  
-  })
+  plot_details <- list(
+    temp_boxplot = list(type = "box", variable = "t2m", title = "Yearly Distribution of Temperature Data Across Selected Cities", y_label = "Temperature [°C]"),
+    precip_boxplot = list(type = "box", variable = "tp", title = "Yearly Distribution of Precipitation Data Across Selected Cities", y_label = "Precipitation [mm]"),
+    precip_barplot = list(type = "bar", variable = "tp", title = "Total Precipitation Per Year (2000-2024)", y_label = "Total Precipitation [mm]"),
+    sf_boxplot = list(type = "box", variable = "sf", title = "Yearly Distribution of Snowfall Data Across Selected Cities", y_label = "Snowfall [mm]"),
+    sf_barplot = list(type = "bar", variable = "sf", title = "Total Annual Snowfall by Location (2000-2024)", y_label = "Total Snowfall [mm]")
+  )
   
-  #precipitation boxplot
-  output$precip_boxplot <- renderPlot({
-    ggplot(data %>% filter(variable == "tp"), aes(x = factor(year), y = value, fill = location)) + 
-      geom_boxplot(outlier.shape = NA, alpha = 0.7) +  
-      facet_wrap(~ location) +  
-      scale_fill_manual(values = color_palette) +  
-      scale_x_discrete(guide = guide_axis(angle = 45)) +
-      labs(
-        title = "Yearly Distribution of Precipitation Data Across Selected Cities",
-        x = "Year", 
-        y = "Precipitation [mm]"
-      ) + 
-      theme_minimal(base_size = 14) +
-      theme(
-        plot.title = element_text(face = "bold", size = 20, hjust = 0.5, color = "#2C3E50"),
-        axis.title.x = element_text(face = "bold", size = 14),  
-        axis.title.y = element_text(face = "bold", size = 14), 
-        legend.position = "none", 
-        strip.text = element_text(face = "bold", size = 14)
-      )
-  })
-  
-  #precipitation barplot 
-  output$precip_barplot <- renderPlot({
-    ggplot(data %>% filter(variable == "tp") %>%
-             group_by(year, location) %>%
-             summarise(total_precipitation = sum(value, na.rm = TRUE), .groups = "drop"),
-           aes(x = factor(year), y = total_precipitation, fill = location)) +
-      geom_bar(stat = "identity", position = "dodge", color = "#023047") +
-      scale_fill_manual(values = color_palette, name = "Location") +
-      scale_x_discrete(guide = guide_axis(angle = 45)) +  
-      labs(
-        title = "Total Precipitation Per Year (2000-2024)",
-        x = "Year", 
-        y = "Total Precipitation [mm]"
-      ) +  
-      theme_minimal(base_size = 14) +
-      theme(
-        plot.title = element_text(face = "bold", size = 20, hjust = 0.5, color = "#2C3E50"),  
-        axis.title.x = element_text(face = "bold", size = 14),  
-        axis.title.y = element_text(face = "bold", size = 14),  
-        legend.position = "right", 
-        legend.title = element_text(face = "bold", size = 14, color = "#2C3E50"),  
-        legend.text = element_text(size = 12),  
-        strip.text = element_text(face = "bold", size = 14)
-      )
-  })
-  
-  #snowfall boxplot
-  output$sf_boxplot <- renderPlot({
-    ggplot(data %>% filter(variable == "sf"), aes(x = factor(year), y = value, fill = location)) + 
-      geom_boxplot(outlier.shape = NA, alpha = 0.7) +  
-      facet_wrap(~ location) +  
-      scale_fill_manual(values = color_palette) +  
-      scale_x_discrete(guide = guide_axis(angle = 45)) +
-      labs(
-        title = "Yearly Distribution of Snowfall Data Across Selected Cities",
-        x = "Year", 
-        y = "Snowfall [mm]"
-      ) +  
-      theme_minimal(base_size = 14) +
-      theme(
-        plot.title = element_text(face = "bold", size = 20, hjust = 0.5, color = "#2C3E50"),
-        axis.title.x = element_text(face = "bold", size = 14),  
-        axis.title.y = element_text(face = "bold", size = 14), 
-        legend.position = "none", 
-        strip.text = element_text(face = "bold", size = 14)
-      )
-  })
-  
-  #snowfall barplot 
-  output$sf_barplot <- renderPlot({
-    ggplot(data %>% filter(variable == "sf") %>%
-             group_by(year, location) %>%
-             summarise(total_snowfall = sum(value, na.rm = TRUE), .groups = "drop"),
-           aes(x = factor(year), y = total_snowfall, fill = location)) +
-      geom_bar(stat = "identity", position = "dodge", color = "#023047") +
-      scale_fill_manual(values = color_palette, name = "Location") +  
-      scale_x_discrete(guide = guide_axis(angle = 45)) +  
-      labs(
-        title = "Total Annual Snowfall by Location (2000-2024)",
-        x = "Year", 
-        y = "Total Snowfall [mm]"
-      ) +  
-      theme_minimal(base_size = 14) +
-      theme(
-        plot.title = element_text(face = "bold", size = 20, hjust = 0.5, color = "#2C3E50"),  
-        axis.title.x = element_text(face = "bold", size = 14),  
-        axis.title.y = element_text(face = "bold", size = 14),  
-        legend.position = "right", 
-        legend.title = element_text(face = "bold", size = 14, color = "#2C3E50"),  
-        legend.text = element_text(size = 12),  
-        strip.text = element_text(face = "bold", size = 14)
-      )
+  lapply(names(plot_details), function(plot_name) {
+    plot_info <- plot_details[[plot_name]]
+    
+    output[[plot_name]] <- renderPlot({
+      if (plot_info$type == "box") {
+        create_boxplot(
+          data = data, 
+          variable = plot_info$variable, 
+          title = plot_info$title, 
+          y_label = plot_info$y_label, 
+          color_palette = color_palette
+        )
+      } else {
+        create_barplot(
+          data = data, 
+          variable = plot_info$variable, 
+          title = plot_info$title, 
+          y_label = plot_info$y_label, 
+          color_palette = color_palette
+        )
+      }
+    })
   })
   
   #data processing for interactive plots
