@@ -155,7 +155,7 @@ ui <- fluidPage(
                  )
 ))))
 
-
+#backend
 server <- function(input, output, session) {
 
   color_palette <- c("#8ecae6", "#219ebc", "#126782", "#005f73")
@@ -192,7 +192,6 @@ server <- function(input, output, session) {
     })
   })
   
-  #data processing for interactive plots
   data_to_plot <- reactive({
     filtered_data <- data %>%
       filter(location %in% input$locations & 
@@ -258,26 +257,20 @@ server <- function(input, output, session) {
     return(NULL)
   })
   
-  observe({
-    #if both city and plot type are selected, clear the message
+  output$no_city_message <- renderText({
     if (length(input$locations) > 0 && length(input$ui_parts) > 0) {
-      output$no_city_message <- renderText(NULL)
+      return(NULL)
     }
     
-    #if no city is selected but at least one plot type is selected
-    else if (length(input$locations) == 0 && length(input$ui_parts) > 0) {
-      output$no_city_message <- renderText("No city selected.")
+    if (length(input$locations) == 0 && length(input$ui_parts) > 0) {
+      return("No city selected.")
     }
     
-    #if a city is selected but no plot type is selected
-    else if (length(input$locations) > 0 && length(input$ui_parts) == 0) {
-      output$no_city_message <- renderText("No plot type selected.")
+    if (length(input$locations) > 0 && length(input$ui_parts) == 0) {
+      return("No plot type selected.")
     }
     
-    #if neither a city nor a plot type is selected, clear the message
-    else {
-      output$no_city_message <- renderText(NULL)
-    }
+    return(NULL)
   })
   
   output$temperatures <- renderText({
