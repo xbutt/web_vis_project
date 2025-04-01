@@ -258,19 +258,13 @@ server <- function(input, output, session) {
   })
   
   output$no_city_message <- renderText({
-    if (length(input$locations) > 0 && length(input$ui_parts) > 0) {
-      return(NULL)
-    }
-    
     if (length(input$locations) == 0 && length(input$ui_parts) > 0) {
       return("No city selected.")
     }
-    
     if (length(input$locations) > 0 && length(input$ui_parts) == 0) {
       return("No plot type selected.")
     }
-    
-    return(NULL)
+    return(NULL)  
   })
   
   output$temperatures <- renderText({
