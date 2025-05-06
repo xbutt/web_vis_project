@@ -1,7 +1,7 @@
 library(ggplot2)
 library(dplyr)
 
-# Function to create boxplots
+#function to create boxplots
 create_boxplot <- function(data, variable_name, title, y_label, color_palette) {
   ggplot(
     data %>% filter(.data$variable == variable_name),  
@@ -32,7 +32,7 @@ create_barplot <- function(data, variable_name, title, y_label, color_palette) {
     data %>%
       filter(.data$variable == variable_name) %>% 
       group_by(year, location) %>% 
-      summarise(total_value = sum(value, na.rm = TRUE), .groups = "drop"),  # Aggregate total values
+      summarise(total_value = sum(value, na.rm = TRUE), .groups = "drop"),
     aes(x = factor(year), y = total_value, fill = location)
   ) +
     geom_bar(stat = "identity", position = "dodge", color = "#023047") +

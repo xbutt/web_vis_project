@@ -229,7 +229,7 @@ server <- function(input, output, session) {
     return(NULL)
   })
   
-  stats_summary <- reactive({
+  output$stats_table <- renderTable({
     data_to_plot() %>%
       group_by(location) %>%
       summarise(
@@ -238,10 +238,6 @@ server <- function(input, output, session) {
         Max = max(value, na.rm = TRUE)
       ) %>%
       rename(City = location)
-  })
-  
-  output$stats_table <- renderTable({
-    stats_summary()
   })
   
   observeEvent(input$palette, {

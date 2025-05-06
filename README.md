@@ -15,7 +15,7 @@ This project provides an interactive climate data dashboard for Uzbekistan. It a
 To run the dashboard, install the necessary R packages by running the following commands in your RStudio console:
 
 ``` r
-install.packages(c("dplyr", "dygraphs", "ggiraph", "ggplot2", "httr2", "leaflet", "reshape2", "shiny", "shinyBS", "shinythemes", "RColorBrewer"))
+install.packages(c("dplyr", "dygraphs", "ggiraph", "ggplot2", "here", "httr2", "leaflet", "reshape2", "shiny", "shinyBS", "shinythemes", "RColorBrewer"))
 ```
 
 Clone or download the repository to your local machine. Open the project in RStudio. Run the app by executing the following command in the console:
