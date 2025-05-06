@@ -1,4 +1,5 @@
 library(terra)
+library(lubridate)
 
 locations <- data.frame(
   name = c("Bukhara", "Fergana", "Samarkand", "Tashkent"),
@@ -14,17 +15,21 @@ for (loc in 1:nrow(locations)) {
     location_coordinates = matrix(c(locations[loc, ]$longitude, locations[loc, ]$latitude), ncol = 2)
     variable_data = extract(raster_data, location_coordinates, method = "simple")
     variable_data = unlist(variable_data)
+    
+    time_vector <- seq(from = as.Date("2000-01-01"), by = "month", length.out = length(variable_data))
+    
     if (variable == "t2m") {
       variable_data = variable_data - 273.15
     } else if (variable == "sf") {
-      variable_data = variable_data * 1000
+      days_in_month_vector <- days_in_month(time_vector)
+      variable_data = variable_data * 1000 * days_in_month_vector
     } else if (variable == "tp") {
-      variable_data = variable_data * 1000
+      days_in_month_vector <- days_in_month(time_vector)
+      variable_data = variable_data * 1000 * days_in_month_vector  
     }
     
     if (is.null(location_data)) {
-      location_data = data.frame(
-        time = seq(from = as.Date("2000-01-01"), by = "month", length.out = length(variable_data)))
+      location_data = data.frame(time = time_vector)
     }
     location_data[[variable]] = variable_data
   }
